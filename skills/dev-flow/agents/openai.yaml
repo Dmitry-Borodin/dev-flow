@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dev Flow"
+  short_description: "Plan, execute, critique, and review project work"
+  default_prompt: "Use $dev-flow to plan and execute this change with project-scoped artifacts and independent post-work reviews."
