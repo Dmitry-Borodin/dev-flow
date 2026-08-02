@@ -1,85 +1,81 @@
 ---
 name: dev-flow
-description: Use when implementing a non-trivial feature, fix, refactor, migration, or other multi-step project change that needs durable requirements, an executable plan, fresh verification, and independent post-implementation critique and code review.
+description: Use when implementing a non-trivial feature, fix, refactor, migration, or other multi-step project change that needs project-owned specifications and task state, an executable plan, fresh verification, and independent post-implementation critique and code review.
 ---
 
 # Dev Flow
 
-Use a lightweight requirements-to-verification workflow. Scale the artifacts to the risk and size of the change, but do not omit the final critique and code-review gates.
+Use a lightweight requirements-to-verification workflow without replacing the target project's planning system. Scale ceremony to risk, but do not omit the final critique and code-review gates.
 
 ## Non-negotiable rules
 
 - Follow direct user instructions and project-local instructions before this workflow.
-- Inspect the current repository, existing conventions, and working-tree state before planning edits.
-- Resolve the project artifact root before writing requirements, plans, or review reports. Read `./references/artifacts.md` for the resolution and safety contract.
+- Inspect the current repository, conventions, and working-tree state before planning edits.
+- Resolve the artifact root and project artifact model before writing. Read `./references/artifacts.md` completely.
+- Reuse project-owned tasks, specifications, decisions, and questions. Do not create a parallel `dev-flow` taxonomy when one already exists.
+- Preserve source specifications unless the user explicitly authorizes changing them; keep derived specifications synchronized with accepted behavior.
 - Keep requirements, implementation, and completion claims aligned. Do not silently change scope.
-- Require fresh verification evidence before claiming that work is complete or correct.
-- After implementation, run both an outcome critic and a code reviewer. They are separate gates with different prompts.
-- Review passes are read-only. The implementer evaluates findings, applies accepted fixes, reruns affected checks, and requests focused re-review.
-- Do not commit, push, publish, deploy, install, or mutate external systems unless the user authorized that action.
+- Require fresh verification evidence before claiming completion.
+- After implementation, run separate outcome-critic and code-review gates.
+- Do not commit, push, publish, deploy, install, or mutate external systems unless the user authorized it.
 
 ## Workflow
 
 ### 1. Establish context
 
-Identify the project root and every applicable instruction file. Inspect relevant code, documentation, tests, recent decisions, and Git state. Preserve unrelated changes and treat nested repositories as separate boundaries.
+Identify the project root, resolved artifact root, and every applicable instruction file at both boundaries. Inspect relevant code, tasks, specifications, decisions, tests, and Git state. Treat nested repositories separately and preserve unrelated changes.
 
-Record a task baseline before editing: the starting revision when one exists, staged and unstaged changes, untracked files, and the state of every relevant nested repository. Use it later to distinguish task changes from pre-existing work.
+Record the starting revision when one exists, staged and unstaged changes, untracked files, and relevant nested-repository states. Use this baseline to distinguish task changes from pre-existing work.
 
-Resolve the artifact root, then locate any existing requirement or plan for the requested work. Extend the existing artifact instead of creating a competing source of truth.
+Map the project's artifact roles before writing. Find the matching current work item; if none exists, create it under the project-defined taxonomy before editing code. Extend that item instead of creating a competing source of truth.
 
-### 2. Frame the change
+### 2. Frame and classify the work
 
-For non-trivial work, create or update a requirement artifact containing:
+Ensure the current work item contains the goal, priority, remaining steps, acceptance criteria, constraints, risks, assumptions, and unresolved blockers. A short change may keep these in one file.
 
-- goal and user-visible outcome;
-- scope and explicit non-goals;
-- acceptance criteria that can be checked;
-- constraints and project conventions;
-- material risks, assumptions, and unresolved decisions.
+Use the project's names for these semantic states:
 
-Ask the user only about decisions that would materially change the result or exceed the authorized scope. Otherwise, state bounded assumptions and proceed.
+- **plan** — unresolved design choice, authorization question, or operator decision remains;
+- **active** — the work is executable without that unresolved decision;
+- **check** — implementation is finished and only a genuinely external verification remains;
+- **done** — acceptance evidence exists and no blocking work remains.
+
+Split executable slices out of a blocked plan. Do not classify a check the agent can perform with available tools or test environments as external.
+
+Transition `plan → active` when blocking decisions are resolved, and `active → plan` when a new blocking decision appears. Transition `active → check` only after implementation and every agent-accessible check passes. When no external gate is required, transition `active → done` directly. A failed external check returns to `active`, or to `plan` when it exposes a new decision. A passed external check transitions to transient `done`, followed immediately by project retention. `check` and `done` are mutually exclusive.
 
 ### 3. Write the executable plan
 
-Map every acceptance criterion to one or more bounded tasks. For each task name the relevant files, intended result, and exact validation. Keep tasks independently reviewable; avoid speculative abstractions and unrelated cleanup.
+Map every acceptance criterion to bounded tasks. For each task name the relevant files, intended result, and exact validation. Keep tasks independently reviewable; avoid speculative abstractions and unrelated cleanup.
 
-Record plan status durably. Update it as facts change, and explain any scope change rather than rewriting history.
+Keep only current and remaining work in the current item unless project instructions require history. Update it as facts change, and explain scope changes rather than rewriting accepted requirements.
 
-### 4. Execute
+### 4. Execute and verify
 
-Implement the smallest complete change that follows existing project patterns. Validate incrementally and keep documentation synchronized with behavior. Stop for a genuine authorization or design blocker; do not stop merely to ask whether to continue an already approved plan.
+Implement the smallest complete change that follows existing project patterns. Validate incrementally and keep editable specifications synchronized with behavior. Stop for a genuine authorization or design blocker, not merely to ask whether to continue an approved plan.
 
-### 5. Verify
+Run the strongest feasible checks for the changed behavior: focused tests first, then the relevant build, lint, integration, or real-environment checks. Read exit codes and full failure summaries. Record exact commands, results, and anything that could not be verified.
 
-Run the strongest feasible checks for the changed behavior: focused tests first, then the repository's relevant build, lint, integration, or real-environment checks. Read exit codes and full failure summaries. Record commands, results, and anything that could not be verified.
+### 5. Run the post-implementation gates
 
-### 6. Run the post-implementation gates
+Launch two isolated reviewers after implementation and initial verification. Give them raw artifacts, not the implementer's reasoning history. Run them in parallel when independent agents are available.
 
-Launch two isolated reviewers after implementation and initial verification. Give them raw artifacts, not the implementer's reasoning history. Run them in parallel when the environment supports independent agents.
+**Outcome critic:** provide the specifications, current work item, complete change manifest, produced behavior, and verification evidence. Ask it to falsify the outcome by finding missing requirements, invalid assumptions, unsafe boundaries, user or operator friction, and evidence gaps.
 
-**Outcome critic**
+**Code reviewer:** provide a separate reviewer the same requirements plus the complete diff or file set. Include every task-created, modified, renamed, or deleted file; staged, unstaged, and untracked changes; nested-repository changes; and identified pre-existing work. Ask it to inspect correctness, regressions, security, data safety, error handling, test quality, conventions, and unnecessary complexity.
 
-Give the critic the requirement, plan, complete change manifest, produced behavior, and verification evidence. Ask it to try to falsify the outcome: find missing requirements, invalid assumptions, unhandled operating conditions, user or operator friction, unsafe boundaries, and evidence gaps.
+Require actionable findings with locations, consequences, and `Critical`, `Important`, or `Minor` classification. If isolated contexts are unavailable, run both checklists as a fallback but mark the independent gates unverified; one combined self-review does not count.
 
-**Code reviewer**
+### 6. Resolve findings and close
 
-Give a separate reviewer the requirement, plan, complete change manifest, complete diff or file set, and verification evidence. The manifest must include every task-created, modified, renamed, or deleted file; staged, unstaged, and untracked changes; separate nested-repository changes; and identified pre-existing work. Ask it to inspect correctness, regressions, security and data safety, error handling, test quality, project conventions, and unnecessary complexity.
+Validate findings against the actual code and requirements. Fix every confirmed requirement, correctness, safety, or security blocker regardless of label. Before the final-manifest review, move durable outcomes into the project's decision references or editable specifications. Rerun affected verification after every accepted fix and durable update. Give the final manifest to both gates again; any behavior, specification, or acceptance change requires both full gates to pass again. Record justified rejections.
 
-Require both reviewers to return actionable findings with locations, consequences, and `Critical`, `Important`, or `Minor` classification. Critical means a confirmed safety, security, data-loss, or fundamental requirement failure. Important means a likely correctness, regression, operability, or verification failure. Minor means a non-blocking clarity or maintainability issue.
+Store review state where project instructions require; otherwise keep it in the current work item. After both final gates pass, only record their results, mark already-executed verification/review steps complete, transition status, and apply project retention. These closure-only updates do not reopen the gates and must not change requirements, acceptance, behavior, or add or substantively alter remaining work. Any other product-code, test, configuration, requirement, plan-content, or behavioral-documentation change reopens affected verification and both review gates.
 
-If isolated reviewer contexts are unavailable, run the two checklists sequentially as a fallback, but record both independent gates as unverified. Do not claim independent review or fully complete the workflow. One combined self-review does not count as two gates.
+Then close, rename, archive, or delete the current item according to project retention policy. Do not create a completed-work journal by default.
 
-### 7. Resolve findings and close
-
-Validate each finding against the actual code and requirements; adversarial review can produce false positives. Fix every confirmed requirement, correctness, safety, or security blocker regardless of its assigned label. Rerun affected verification and complete a focused re-review after every accepted fix. Record justified rejections instead of silently discarding them.
-
-Persist one review record under the resolved artifact root with both passes, reviewer-isolation status, findings, dispositions, fixes, verification, and re-review results.
-
-After the gates pass, permit only append-only review results and a plan-status transition as closure metadata. These entries must not change requirements, acceptance semantics, or behavior. Any post-review product, test, configuration, requirement, plan-content, or behavioral-documentation edit reopens affected verification and review.
-
-Mark the plan complete only when acceptance criteria have evidence, both independent gates passed, the reviewed implementation snapshot matches the final verified implementation state, confirmed blocking findings are resolved, and remaining limitations are explicit. Report the outcome, changed artifacts, verification, review disposition, and any operator-owned next step.
+Claim completion only when acceptance criteria have evidence, both independent gates passed on the final manifest, the reviewed implementation matches the final verified state, blocking findings are resolved, no external gate remains, and remaining non-gating limitations are explicit.
 
 ## Right-size the workflow
 
-For a small but non-trivial change, the requirement and plan may be short sections in one artifact. For a long or multi-phase effort, split the plan into independently verifiable phases and preserve completion state in the artifact root. Do not introduce worktrees, frequent commits, step-file engines, or extra tracking systems unless the project or user requires them.
+For long work, split independently verifiable phases and preserve live state in project artifacts. Do not introduce worktrees, forced commits, step-file engines, external trackers, or extra directories unless the project or user requires them.
