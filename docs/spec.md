@@ -1,125 +1,184 @@
-# Dev Flow Skill Specification
+# Dev Flow V1 Specification
 
-Status: P0
+Status: approved implementation baseline
 
-## Purpose
+## Outcome
 
-`dev-flow` is a reusable Agent Skill for non-trivial project changes. It keeps requirements, live task state, implementation, verification, critique, and code review aligned without replacing a project's existing planning and documentation system.
+`dev-flow` manages a non-trivial software change as a durable, resumable state
+machine. Another agent must be able to determine the current phase, validate
+the evidence, and continue without the previous chat.
 
-The skill is technology-agnostic and supports public/private documentation boundaries and nested repositories.
+The V1 runtime is self-contained. It uses local files, Git when available, and
+Python 3.10+ from the standard library. It does not depend on Beads, OpenSpec,
+Superpowers, MCP servers, hosted services, or another task tracker.
 
-## Authority
+## Architecture
 
-Apply instructions in this order:
+The canonical installable artifact remains `skills/dev-flow/`.
 
-1. the current user's explicit request and authorization;
-2. every project-local instruction file applicable from the code root and resolved artifact root down to the target artifact;
-3. this specification and the skill defaults.
+| Component | Responsibility |
+|---|---|
+| `SKILL.md` | Activation, invariant summary, runtime protocol, and phase routing |
+| `assets/workflow-v1.json` | Stable phases, profiles, transitions, and result enums |
+| `assets/change-v1.schema.json` | Portable machine-readable change-manifest contract |
+| `scripts/flowctl.py` | Deterministic validation, diagnosis, and state transitions |
+| `references/phase-*.md` | Semantic contract loaded only for the current phase |
+| `change.json` | Lifecycle, current phase, phase states, blockers, and provenance |
+| `events.jsonl` | Append-only workflow decisions and transitions |
+| Markdown artifacts | Brief, research, spec, plan, verification, review, and closure evidence |
 
-Project instructions own artifact names, paths, language, mutability, and retention. `.dev-flow.yaml` routes to an artifact root; it is not a second policy language.
+The agent owns semantic decisions. `flowctl` owns lifecycle invariants,
+mechanical evidence checks, transition legality, provenance, and stable JSON
+status output.
 
-## Artifact-root contract
+## V1 invocation boundary
 
-Resolve the artifact root from an expressly designated user path, then `{project-root}/.dev-flow.yaml`, then the default `{project-root}/docs/dev-flow`.
+Call `flowctl` with an explicit change directory. Initialize a genuinely new
+directory before requesting status. After verification provenance exists,
+status and every active-lifecycle mutation require an explicit workspace path.
+Project discovery and project-to-artifact-root mapping remain agent-level in
+V1; unresolved automation choices are tracked in `docs/questions.md`.
 
-P0 configuration contains one repo-relative key:
+The helper exposes:
 
-```yaml
-artifact_root: private
+```text
+init
+validate
+status
+transition
+skip
+block
+unblock
+rewind
 ```
 
-Invalid configuration fails closed. Normal and configured roots must stay inside the project after lexical and canonical resolution. A user may explicitly authorize an exact external destination. Nested Git repositories remain separate change, validation, and reporting boundaries.
+All operational command output is JSON; conventional `--help` is text. Success exits with code 0. Invalid input,
+inconsistent state, illegal transitions, and stale evidence exit non-zero.
 
-## Semantic artifact model
+## State model
 
-The skill recognizes roles rather than fixed directories:
+The ordered phases are:
 
-| Role | Contract |
-|---|---|
-| Source specification | Authoritative requirements; do not edit without explicit authorization. |
-| Derived specification | Project-maintained behavior or design; update with accepted behavior. |
-| Current work item | Goal, priority, remaining steps, acceptance, blockers, verification, and review state. |
-| Decision reference | Durable accepted decisions and rationale; not a completed-work log. |
-| Open questions | Only unresolved questions; answered entries are removed. |
-| Implementation map | Current system model and near-term ordering; not a second backlog. |
-| Review evidence | Findings, dispositions, fixes, and re-review state; retention is project-defined. |
+```text
+frame -> discover -> specify -> plan -> implement -> verify -> review -> close -> done
+```
 
-Projects may combine roles or map them to existing files. The skill must discover and reuse that mapping before creating artifacts.
+`discover` and `specify` may be skipped only when their manifest entry is not
+required. A skip records a non-empty reason.
 
-## Work-item lifecycle
+Lifecycle and phase state are independent:
 
-Every non-trivial change has one current work item before implementation begins. Projects choose the filename or status representation; the semantic states are:
+- lifecycle: `active`, `blocked`, `done`, `cancelled`, `superseded`;
+- phase state: `pending`, `active`, `passed`, `skipped`;
+- computed health: `consistent`, `stale`, `inconsistent`, `invalid`.
 
-- **plan** — an unresolved design choice, authorization question, or operator decision remains;
-- **active** — the work is executable now;
-- **check** — implementation is complete and only genuinely external verification remains;
-- **done** — acceptance evidence exists and no blocking work remains.
+`blocked` is an overlay: the current phase remains active and at least one
+blocker remains open. Terminal lifecycles have no current or active phase.
 
-Executable slices must not remain blocked behind a plan-only decision. Checks available to the agent through project tools, disposable environments, or allocated test systems remain active work rather than external gates.
+## Profiles
 
-| From | Condition | To |
+V1 provides dependency-free defaults, materialized into every new manifest:
+
+| Kind | Discover | Specify | Plan | Verify | Review |
+|---|---|---|---|---|---|
+| feature | optional | required | required | required | required |
+| bug | required | optional | required | required | required |
+| refactor | required | required | required | required | required |
+| maintenance | optional | optional | required | required | optional |
+
+`frame`, `implement`, and `close` are always required. Profile defaults do not
+silently change after initialization.
+
+## Invariants
+
+`flowctl` must enforce:
+
+1. Active or blocked changes have exactly one active phase and a matching
+   `current_phase`.
+2. Terminal changes have no active or current phase.
+3. Passed phases have existing evidence files inside the change directory.
+4. Skipped phases have a reason and are not required.
+5. Blocked changes have at least one open blocker; active changes have none.
+6. Done requires `close=passed`; required phases before close are passed.
+7. Every state mutation increments `revision` and appends an event with the
+   resulting revision.
+8. Phase identifiers and contract versions retain their V1 meaning.
+9. A plan becomes stale when its stored `spec.md` digest differs from the
+   current file.
+10. Verification and review become stale when their stored workspace
+    fingerprint differs from the explicit current workspace. Change artifacts
+    are excluded from the product-workspace fingerprint.
+
+Mechanical checks never claim semantic sufficiency. Phase references define
+the semantic exit checks the agent must perform before asking `flowctl` to
+advance.
+
+## Phase mutation boundaries
+
+| Phase | Primary result | Product-code mutation |
 |---|---|---|
-| plan | Blocking decisions are resolved | active |
-| active | A new blocking decision appears | plan |
-| active | Implementation and all agent-accessible checks pass; only external verification remains | check |
-| check | External verification fails without a new decision | active |
-| check | External verification exposes a new decision | plan |
-| check | External verification passes | done, then retention |
-| active | All acceptance evidence exists and no external gate is required | done, then retention |
+| frame | `brief.md` | forbidden |
+| discover | `research.md` when used | read-only; disposable experiments only |
+| specify | `spec.md` | forbidden |
+| plan | `plan.md` | forbidden |
+| implement | scoped code and tests | allowed |
+| verify | `verification.md` | forbidden; failures rewind to implement |
+| review | `review.md` | forbidden; findings rewind to the affected phase |
+| close | `closure.md` | forbidden; product-document sync must already be reviewed |
 
-`done` is transient and cannot coexist with an external gate. On completion, move durable outcomes into decision references or derived specifications, then immediately apply the project's close/archive/delete policy. The default is to delete the transient work item and not maintain a completed-work journal.
+An implementation request authorizes scoped code, tests, and project
+documentation changes. It does not authorize commit, push, publish, merge,
+deployment, destructive external changes, or unrelated cleanup.
 
-## Planning and execution contract
+## Provenance
 
-Before editing, inspect code, instructions, specifications, decisions, tests, and all relevant Git boundaries. Record a baseline that distinguishes pre-existing work from task changes.
+V1 tracks two critical edges:
 
-Find the matching current work item before implementation. If it does not exist, create it under the project-mapped taxonomy before editing code. The current work item must state:
+- `spec.md -> plan`: passing plan records the current spec digest;
+- workspace -> verify/review: passing those phases records a deterministic Git
+  fingerprint when possible, otherwise a content fingerprint of the workspace;
+  the resolved change directory is excluded from both forms.
 
-- goal and user-visible outcome;
-- priority and remaining steps;
-- scope and non-goals;
-- testable acceptance criteria;
-- constraints, risks, and assumptions;
-- unresolved decisions or external gates;
-- exact validation required.
+`status` reports stale evidence and an executable rewind. It does not mutate
+state while diagnosing it. Once workspace provenance exists, omitting the
+workspace is an inconsistency rather than permission to skip freshness checks.
+Terminal `done` records historical completion; `cancelled` and `superseded`
+return `terminated`, never `complete`.
 
-Implementation must remain scoped, preserve unrelated work, follow existing patterns, and keep editable specifications synchronized. Commits, pushes, installation, deployment, and external mutation require user authorization.
+## Behavioral requirements
 
-## Verification and review contract
+- Resume from the recorded phase instead of restarting brainstorming.
+- Refuse silent selection when no explicit change path can be resolved.
+- Do not implement with invalid, inconsistent, or stale upstream state.
+- Use a compact profile for small maintenance work.
+- Keep a bug in discover until reproduction evidence exists.
+- Never create a fallback tracker when an external tracker is absent; V1 has no
+  tracker contract at all.
+- Rewind before fixing failures found during verify or review.
+- Stop at plan when the user requested only a plan.
+- Continue across phase boundaries until the target in the current user
+  instruction, a real blocker, or completion. V1 does not persist authority or
+  target scope; without an explicit current target it finishes at most the
+  current phase.
 
-Completion requires fresh evidence from the strongest feasible project checks. Record exact commands, environments, results, and unverified limitations.
+## Validation
 
-After implementation and initial verification, run two isolated gates:
+Completion requires:
 
-1. an outcome critic attempts to falsify requirements coverage, assumptions, safety, operability, and evidence;
-2. a separate code reviewer examines the complete task change for correctness, regressions, security, tests, conventions, and unnecessary complexity.
+- standard-library unit and fixture tests for every command and invariant;
+- schema/workflow parity checks and broken-reference checks;
+- behavioral eval scenarios covering activation, resume, stale state,
+  blocking, rewind, restraint, and completion;
+- independent outcome and code/skill reviews over the final manifest;
+- a fresh full test run after accepted review fixes.
 
-Reviewers receive raw specifications, task state, complete change manifests, and verification evidence rather than implementation reasoning. Confirmed blocking findings require fixes and affected verification. Update durable decisions and derived specifications before the final-manifest review. Both gates must receive that final manifest; any later behavior, specification, or acceptance change requires both full gates to pass again. If isolated contexts are unavailable, fallback self-review is useful but does not satisfy the independent gates.
+## V1 non-goals
 
-No behavioral change may follow final review without reopening affected verification and review. Review evidence lives where project instructions require, otherwise in the current work item.
-
-## Completion contract
-
-Claim completion only when:
-
-- every acceptance criterion has current evidence;
-- both independent review gates passed;
-- the reviewed implementation matches the final verified state;
-- confirmed blockers are resolved;
-- durable decisions and derived specifications are updated;
-- no external gate remains;
-- remaining non-gating limitations are explicit;
-- the current item is transitioned according to project retention policy.
-
-## Default behavior without a project adapter
-
-Use `docs/dev-flow` with `tasks/`, `specs/`, `reference/decisions.md`, and `questions.md`. Mark every specification as source or derived and name its authority or provenance. Use `plan-`, `task-`, and `check-` filename prefixes. Keep review state in the current task, migrate durable outcomes, then delete the completed task.
-
-## Non-goals for P0
-
-- installing or publishing the skill;
-- requiring worktrees, commits, pull requests, or external trackers;
-- maintaining a database or task graph;
-- adding project-specific paths to the universal runtime skill;
-- generating a permanent completed-work journal;
-- implementing multi-layer configuration or a workflow engine.
+- Beads or any other tracker integration;
+- automatic adoption or migration of legacy work;
+- automatic project or change discovery;
+- plugin packaging or installation;
+- worktree creation, commit cadence, publishing, deployment, or merge;
+- task graph scheduling, dashboards, personas, or required subagents;
+- complete semantic parsing of acceptance-criteria traceability;
+- a full provenance graph for every artifact.

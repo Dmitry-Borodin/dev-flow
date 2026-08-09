@@ -1,0 +1,114 @@
+{
+  "contract": "dev-flow/workflow/v1",
+  "version": "1",
+  "phases": [
+    "frame",
+    "discover",
+    "specify",
+    "plan",
+    "implement",
+    "verify",
+    "review",
+    "close"
+  ],
+  "lifecycles": [
+    "active",
+    "blocked",
+    "done",
+    "cancelled",
+    "superseded"
+  ],
+  "phase_states": [
+    "pending",
+    "active",
+    "passed",
+    "skipped"
+  ],
+  "health": [
+    "consistent",
+    "stale",
+    "inconsistent",
+    "invalid"
+  ],
+  "results": [
+    "ready",
+    "blocked",
+    "stale",
+    "inconsistent",
+    "invalid",
+    "complete",
+    "terminated"
+  ],
+  "evidence": {
+    "frame": "brief.md",
+    "discover": "research.md",
+    "specify": "spec.md",
+    "plan": "plan.md",
+    "implement": "implementation.md",
+    "verify": "verification.md",
+    "review": "review.md",
+    "close": "closure.md"
+  },
+  "transitions": {
+    "frame": ["discover"],
+    "discover": ["specify"],
+    "specify": ["plan"],
+    "plan": ["implement"],
+    "implement": ["verify"],
+    "verify": ["review"],
+    "review": ["close"],
+    "close": ["done"]
+  },
+  "rewinds": {
+    "frame": [],
+    "discover": ["frame"],
+    "specify": ["discover", "frame"],
+    "plan": ["specify", "discover", "frame"],
+    "implement": ["plan", "specify", "discover", "frame"],
+    "verify": ["implement", "plan", "frame"],
+    "review": ["verify", "implement", "plan", "specify", "frame"],
+    "close": ["review", "verify", "implement", "plan", "specify", "frame"]
+  },
+  "profiles": {
+    "feature": {
+      "frame": true,
+      "discover": false,
+      "specify": true,
+      "plan": true,
+      "implement": true,
+      "verify": true,
+      "review": true,
+      "close": true
+    },
+    "bug": {
+      "frame": true,
+      "discover": true,
+      "specify": false,
+      "plan": true,
+      "implement": true,
+      "verify": true,
+      "review": true,
+      "close": true
+    },
+    "refactor": {
+      "frame": true,
+      "discover": true,
+      "specify": true,
+      "plan": true,
+      "implement": true,
+      "verify": true,
+      "review": true,
+      "close": true
+    },
+    "maintenance": {
+      "frame": true,
+      "discover": false,
+      "specify": false,
+      "plan": true,
+      "implement": true,
+      "verify": true,
+      "review": false,
+      "close": true
+    }
+  }
+}

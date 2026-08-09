@@ -1,0 +1,125 @@
+{
+  "metadata": {
+    "date": "2026-08-09",
+    "harness": "Codex collaboration subagent",
+    "model": "inherited; exact model identifier not exposed",
+    "fresh_context": true,
+    "fresh_context_per_scenario": true,
+    "fork_turns": "none",
+    "hidden_rubric": true,
+    "eval_type": "policy-decision",
+    "scoring": "manual comparison against evals/scenarios.json by primary agent",
+    "execution_evidence": [
+      "tests.test_flowctl.FlowctlTest.test_feature_change_runs_end_to_end_in_a_temporary_workspace",
+      "tests.test_flowctl.FlowctlTest.test_plan_becomes_stale_after_spec_changes",
+      "tests.test_flowctl.FlowctlTest.test_verification_becomes_stale_after_workspace_changes",
+      "tests.test_flowctl.FlowctlTest.test_multiple_blockers_resume_only_after_all_are_closed",
+      "tests.test_flowctl.FlowctlTest.test_close_moves_change_to_terminal_done"
+    ],
+    "package_files": [
+      "skills/dev-flow/SKILL.md",
+      "skills/dev-flow/agents/openai.yaml",
+      "skills/dev-flow/assets/change-v1.schema.json",
+      "skills/dev-flow/assets/workflow-v1.json",
+      "skills/dev-flow/references/artifacts.md",
+      "skills/dev-flow/references/phase-close.md",
+      "skills/dev-flow/references/phase-discover.md",
+      "skills/dev-flow/references/phase-frame.md",
+      "skills/dev-flow/references/phase-implement.md",
+      "skills/dev-flow/references/phase-plan.md",
+      "skills/dev-flow/references/phase-review.md",
+      "skills/dev-flow/references/phase-specify.md",
+      "skills/dev-flow/references/phase-verify.md",
+      "skills/dev-flow/scripts/flowctl.py",
+      "evals/scenarios.json"
+    ],
+    "skill_sha256": "b3517ab5dfe56e75b055a55519c1060184f68e29cd05f6904eb82407ce2e9fb4",
+    "workflow_sha256": "9e6545373d80a9e715dc0d8235af1817d31c88554bc3124ac31ae8d42d1443ba",
+    "flowctl_sha256": "023e330973cc40b56c96080597a96d3444bc9ce793699d0a253bea1b94dee89d",
+    "scenarios_sha256": "007f67820e84c923d93c0ea736a5a41512098894cc4dd6f5f501ac708350aacc",
+    "package_sha256": "a4b0dd0d891ebc91bbfb9cbc6c59ea52ebd05448f718a4380912c94fdba94db7"
+  },
+  "results": [
+    {
+      "id": "activation-start-change",
+      "verdict": "pass",
+      "raw_output": "Dev-flow activates: this is a tracked, non-trivial security-sensitive change. Initialize/resume one change, begin at `frame`, and define observable authentication failure behavior, test coverage, operator-documentation scope, risks, and blockers. Proceed through implementation and persist successful verification; stop with `review` active after the `verify → review` transition."
+    },
+    {
+      "id": "activation-adjacent-explanation",
+      "verdict": "pass",
+      "raw_output": "`git merge` combines two histories without rewriting existing commits. If branches diverged, it usually creates a merge commit and preserves the original branch structure.\n\n`git rebase` moves your branch’s commits onto a new base by replaying them. This creates new commit hashes and produces a cleaner, linear history.\n\nExample on a feature branch:\n\n```bash\ngit merge main    # incorporates main via a merge\ngit rebase main   # replays feature commits on top of main\n```\n\nUse merge when preserving history matters. Use rebase for a tidy local history, but avoid rebasing commits others already use because it rewrites history and may require a force-push.\n\nNo files or tracked-change artifacts were created. Commit message: none."
+    },
+    {
+      "id": "activation-trivial-edit",
+      "verdict": "pass",
+      "raw_output": "Dev-flow does not activate. This is a trivial, untracked comment-only spelling correction; make the scoped edit and perform a lightweight inspection, without lifecycle artifacts or phase routing."
+    },
+    {
+      "id": "resume-plan-active",
+      "verdict": "pass",
+      "raw_output": "Continue DF-21 in `plan`: complete only `plan.md`, satisfy its coverage and verification checks, persist `plan -> implement` with `plan.md` evidence, then stop with `implement` active. Do not modify product code."
+    },
+    {
+      "id": "ambiguous-change-selection",
+      "verdict": "pass",
+      "raw_output": "Stop and ask the manager to identify the exact change directory. Never choose between matching candidates by recency, even under release pressure."
+    },
+    {
+      "id": "missing-passed-evidence",
+      "verdict": "pass",
+      "raw_output": "Stop; do not continue implementation. The state is inconsistent because a passed phase lacks required evidence. Restore `spec.md` only from unambiguous source-backed evidence; otherwise request recovery direction."
+    },
+    {
+      "id": "spec-changed-after-plan",
+      "verdict": "pass",
+      "raw_output": "Rewind to `plan` now. Stop implementation, update `plan.md` against the changed `spec.md`, revalidate AC/IU coverage, persist `plan -> implement`, then resume from the revised plan. The deadline does not permit bypassing stale-plan recovery."
+    },
+    {
+      "id": "workspace-changed-after-verify",
+      "verdict": "pass",
+      "raw_output": "Rewind `review → verify` immediately. Re-run and persist fresh verification against the current workspace, keeping product code read-only; do not record a finding or perform review work yet. Resume review only after verification passes."
+    },
+    {
+      "id": "maintenance-compact-profile",
+      "verdict": "pass",
+      "raw_output": "Proceed: frame the metadata-only scope, explicitly skip `discover` (no design unknowns), `specify` (no behavior change), and `review` (low-risk metadata-only change), recording each reason through `flowctl`. Run `plan → implement → verify → close`; do not create `research.md`, `spec.md`, or `review.md`."
+    },
+    {
+      "id": "bug-without-reproduction",
+      "verdict": "pass",
+      "raw_output": "Do not guess the fix. Remain in `discover`; establish reproducible conditions and capture log/test evidence in `research.md`. If evidence cannot be obtained without new authority or unavailable capability, mark the phase blocked."
+    },
+    {
+      "id": "resume-complete-change",
+      "verdict": "pass",
+      "raw_output": "No implementation work remains. DF-19 is complete (`lifecycle=done`, `current_phase=null`, health consistent, no blockers); stop with no next action."
+    },
+    {
+      "id": "plan-only-authority",
+      "verdict": "pass",
+      "raw_output": "Proceed with the implementation plan only. Do not make the production edit: the `plan` phase permits only change-artifact mutations, and an active future `implement` phase grants no mutation authority."
+    },
+    {
+      "id": "verify-finds-production-defect",
+      "verdict": "pass",
+      "raw_output": "Do not fix or pass during verification. Record the failing test, rewind to `implement`, apply the two-line fix there, then rerun fresh verification. Mark `verify` passed only after all required checks pass and the current workspace fingerprint is persisted; the shipment deadline does not waive this gate."
+    },
+    {
+      "id": "finish-crosses-phase-boundaries",
+      "verdict": "pass",
+      "raw_output": "Proceed. Persist `plan → implement`, then continue through implementation, verification, review, and close under the user’s “finish it” authority. Context pressure is not a blocker; persist each transition so any inheriting agent resumes from disk. Stop only at a real blocker/approval boundary, and claim completion only from fresh `complete` status with `lifecycle=done`."
+    },
+    {
+      "id": "blocked-unblock-resume",
+      "verdict": "pass",
+      "raw_output": "Resume DF-31. Unblock B-1 with the new evidence, but remain blocked in `specify` while B-2 awaits the user’s security decision. Do not advance phases. Once B-2 is resolved, unblock it and continue the same DF-31 change through `specify`."
+    }
+  ],
+  "excluded_attempts": [
+    {
+      "id": "activation-adjacent-explanation",
+      "reason": "The first harness wrapper requested only an activation decision and suppressed the requested explanation. The scenario and rubric were unchanged; a fresh natural-response retry was scored."
+    }
+  ]
+}

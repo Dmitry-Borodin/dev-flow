@@ -1,76 +1,58 @@
-# Project Artifact Contract
+# Change Artifact Contract
 
-Resolve one artifact root, then use the target project's own artifact taxonomy and retention rules.
-
-## Authority and discovery
-
-1. Follow an artifact root expressly designated in the current user request.
-2. Otherwise read the top-level `artifact_root` value in `{project-root}/.dev-flow.yaml`.
-3. Otherwise use `{project-root}/docs/dev-flow`.
-
-After resolving the root, read instruction files at both the project root and artifact root. Before reading or writing a target artifact, also read every instruction file applicable along the path from those boundaries to the target. The nearest applicable instructions define exact paths, naming, language, mutability, and retention. They override the fallback layout below.
-
-A path that merely names source material is not an artifact-root override. If the user names an existing task or specification, reuse that artifact and keep root resolution unchanged.
-
-## Project configuration
-
-Do not create `.dev-flow.yaml` automatically. A project opts in explicitly:
-
-```yaml
-artifact_root: private
-```
-
-P0 requires exactly one YAML document. Its root must be a mapping containing exactly one scalar key, `artifact_root`, with one non-empty scalar string value. Reject additional documents, malformed YAML, duplicate or unknown keys, non-string values, an empty value, `.`, an absolute configured path, a `..` segment, or a root that resolves to an existing file. If configuration exists but is invalid, stop before writing; do not fall back elsewhere.
-
-Resolve configured and relative user paths from the project root. If a user-designated path normalizes or resolves outside the project, obtain authorization for that exact external destination.
-
-Confirm lexical and canonical containment before every write. Resolve existing ancestors, reject unapproved symlink escapes, and treat an authorized external root as the exact write boundary.
-
-If the artifact root is a nested repository, inspect and report its instructions, status, diff, and validation separately from the code repository.
-
-## Semantic roles
-
-Map these roles onto existing project artifacts; one file may serve multiple roles when project rules allow:
-
-- **source specification** — authoritative user or contract requirements; immutable unless explicitly authorized;
-- **derived specification** — project-maintained behavior or design documentation; update when accepted behavior changes;
-- **current work item** — goal, priority, remaining steps, acceptance, blockers, verification, and review state;
-- **decision reference** — durable accepted decisions and rationale, not a work log;
-- **open questions** — only unresolved questions; remove answered entries;
-- **implementation map** — current system model and near-term ordering, not a second backlog;
-- **review evidence** — active findings, dispositions, fixes, and re-review state; retain or remove per project policy.
-
-Do not create new role directories when project instructions already map these concepts.
-
-## Lifecycle
-
-- **plan:** unresolved design, authorization, or operator decision remains. Split independent executable slices into current work items in the active state.
-- **active:** work can proceed now. Keep the artifact current and focused on remaining work.
-- **check:** only an external verification remains. Agent-accessible tests and allocated environments do not qualify as external.
-- **done:** acceptance evidence exists, durable decisions and specification changes are already included in the reviewed manifest, and no external gate remains. Treat this as a transient state and immediately close, archive, or delete the current item according to project policy.
-
-| From | Condition | To |
-|---|---|---|
-| plan | Blocking decisions resolved | active |
-| active | New blocking decision appears | plan |
-| active | Implementation and all agent-accessible checks pass; only external verification remains | check |
-| check | External verification fails without a new decision | active |
-| check | External verification exposes a new decision | plan |
-| check | External verification passes | done, then retention |
-| active | All acceptance evidence exists and no external gate is required | done, then retention |
-
-File prefixes, priority notation, status fields, and completed-item retention are project-defined. Without project rules, use `plan-<slug>.md`, `task-<slug>.md`, and `check-<slug>.md`; move durable outcomes before final review, then delete the finished work item after the gates pass. Do not keep a completion journal by default.
-
-## Fallback layout
-
-Only when the project has no existing taxonomy, use:
+Use one directory per tracked change. Follow a user-designated location or the
+project's own planning convention. Without either, use:
 
 ```text
-docs/dev-flow/
-  tasks/
-  specs/
-  reference/decisions.md
-  questions.md
+<project-root>/docs/dev-flow/changes/<change-id>-<slug>/
 ```
 
-Every fallback file under `specs/` must declare `Role: source specification` or `Role: derived specification` and identify its authority or provenance. Keep review state in the current task. Reuse an existing artifact for the same work instead of creating a duplicate.
+An exact user-authorized external directory is allowed. Keep the product
+workspace and change directory as separate command arguments. `flowctl`
+excludes the resolved change directory from product-workspace fingerprints, so
+state and phase artifacts cannot invalidate their own verification.
+
+## Durable files
+
+| File | Purpose |
+|---|---|
+| `change.json` | Machine-owned lifecycle, phase, blockers, and provenance |
+| `events.jsonl` | Machine-owned append-only workflow events |
+| `brief.md` | Goal, scope, constraints, and success |
+| `research.md` | Discovery evidence when discovery is used |
+| `spec.md` | Observable behavior and acceptance criteria |
+| `plan.md` | Implementation units, paths, dependencies, and checks |
+| `implementation.md` | Changed paths, deviations, and implementation evidence |
+| `verification.md` | Commands, results, environments, and acceptance coverage |
+| `review.md` | Outcome and code-review findings and dispositions |
+| `closure.md` | Final outcome, durable links, limitations, and follow-ups |
+
+Create Markdown files only when their phase uses them. Optional phases still
+remain explicit in `change.json` and must be skipped through `flowctl`.
+
+## Initialization
+
+If `change.json` is absent because the user is starting a new tracked change,
+initialize only after selecting one unambiguous directory:
+
+```text
+python3 <skill-directory>/scripts/flowctl.py --change <directory> init \
+  --id <id> --project <project> --title <title> \
+  --kind feature|bug|refactor|maintenance --risk low|medium|high
+```
+
+The kind materializes phase requirements once. Later skill versions must not
+silently change an existing manifest's profile.
+
+## Path and content rules
+
+- Store evidence paths relative to the change directory.
+- Refer to product files as logical repository aliases such as
+  `code:src/server.py`; do not store machine-local absolute paths.
+- Keep source requirements immutable unless the user authorizes changes. A
+  local `spec.md` may cite or summarize an external source and must name it.
+- Do not store secrets, raw environment values, transcripts, hidden reasoning,
+  or every shell command.
+- Store decisions, evidence, blockers, transitions, overrides, and approvals.
+- Use `flowctl` for every lifecycle mutation. Treat direct edits to machine-owned
+  files as recovery work requiring explicit reconciliation.
