@@ -43,7 +43,6 @@ Use `flowctl.py --help` for syntax. Never hand-edit its state files in normal us
 
 ## Invariants
 
-- Treat disk state, not chat, as the lifecycle source of truth.
 - Keep exactly one active phase for active or blocked changes.
 - Require evidence for passed phases and a reason for skipped phases.
 - Rewind before fixing a failure found during read-only verify or review.
