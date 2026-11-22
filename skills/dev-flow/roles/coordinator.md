@@ -27,6 +27,7 @@ Orchestrate; do not implement work that [Roles](../SKILL.md#roles) gives to a de
 
 ```text
 Role: <developer | reviewer | observer | describer | design consult>; brief: <role file>
+Model: <model and effort, from the role's class>
 Report to: <coordinator>; full report file: <path outside the repo>
 Working directory: <path>
 Goal: <observable outcome>

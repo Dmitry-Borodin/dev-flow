@@ -3,7 +3,7 @@
 ## Purpose
 
 Run or watch one prescribed long check and report its material events and terminal result.
-A fast model is enough; the job is mechanical.
+The cheap class is enough; the job is mechanical.
 
 ## Inputs
 

@@ -5,13 +5,17 @@ from pathlib import Path
 SKILL_DIR = Path(__file__).resolve().parent.parent / "skills" / "dev-flow"
 SKILL = SKILL_DIR / "SKILL.md"
 ROLES = sorted((SKILL_DIR / "roles").glob("*.md"))
+MODELS = SKILL_DIR / "models.md"
 MAX_SKILL_LINES = 500
 MAX_ROLE_LINES = 200
+MAX_MODELS_LINES = 60
 MAX_WIDTH = 100
 PROJECT_SPECIFIC = re.compile(
-    r"\b(subyard|yard|claude|codex|opus|sonnet|haiku|fable|gpt|gh|github|container"
-    r"|agents\.md|claude\.md)\b",
-    re.IGNORECASE,
+    r"\b(subyard|yard|gh|github|container|agents\.md|claude\.md)\b", re.IGNORECASE
+)
+# Model and vendor names live only in models.md.
+MODEL_NAMES = re.compile(
+    r"\b(claude|codex|opus|sonnet|haiku|fable|gpt|sol|astra|luna)\b", re.IGNORECASE
 )
 
 
@@ -30,7 +34,7 @@ def slug(heading):
 
 class SkillStructureTest(unittest.TestCase):
     def setUp(self):
-        self.files = [SKILL, *ROLES]
+        self.files = [SKILL, *ROLES, MODELS]
         self.text = {path: path.read_text(encoding="utf-8") for path in self.files}
 
     def test_frontmatter(self):
@@ -51,6 +55,7 @@ class SkillStructureTest(unittest.TestCase):
         for path in ROLES:
             with self.subTest(path=path.name):
                 self.assertLessEqual(len(self.text[path].splitlines()), MAX_ROLE_LINES)
+        self.assertLessEqual(len(self.text[MODELS].splitlines()), MAX_MODELS_LINES)
 
     def test_width(self):
         for path in self.files:
@@ -64,6 +69,12 @@ class SkillStructureTest(unittest.TestCase):
         for path in self.files:
             with self.subTest(path=path.name):
                 self.assertEqual(PROJECT_SPECIFIC.findall(self.text[path]), [])
+                if path != MODELS:
+                    self.assertEqual(MODEL_NAMES.findall(self.text[path]), [])
+
+    def test_models_linked(self):
+        self.assertTrue(MODELS.is_file())
+        self.assertIn("](models.md)", self.text[SKILL])
 
     def test_skill_anchors_exist(self):
         anchors = {slug(h) for h in re.findall(r"^#+ (.+)$", self.text[SKILL], re.MULTILINE)}
