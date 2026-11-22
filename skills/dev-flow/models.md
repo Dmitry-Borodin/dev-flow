@@ -1,7 +1,8 @@
 # Models
 
-Each role runs on a model class. Choose the least capable class that does the job, and always
-state the model explicitly when assigning.
+Each role runs on a model class. The table below is a reference default: use it only when no
+other instruction (project, local override, operator) says which model to use. Choose the least
+capable class that does the job, and always state the model explicitly when assigning.
 
 | Class | Roles | Claude | Codex | Effort |
 | --- | --- | --- | --- | --- |
