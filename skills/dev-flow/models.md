@@ -13,16 +13,14 @@ capable class that does the job, and always state the model explicitly when assi
 
 ## Overrides
 
-The more specific layer wins, row by row:
+The more specific layer wins, row by row: project instructions, a local override file, the
+defaults above.
 
-1. the project's instructions;
-2. the local override file in the config directory that matches where the skill is installed:
-   `$XDG_CONFIG_HOME/dev-flow/models.md` (default `~/.config/dev-flow/models.md`) for a user
-   install, the system config directory, such as `/etc/dev-flow/models.md`, for a system-wide one;
-3. the defaults above.
+Keep the override in the skill's install scope (workspace or project, user, system) at that
+scope's usual config location, e.g. `.dev-flow/models.md` in a workspace or
+`$XDG_CONFIG_HOME/dev-flow/models.md` for a user. Keep a workspace file out of version control
+unless the project shares it. Use the same table, changed rows only; installs and updates never
+rewrite it.
 
-An override uses the same table and lists only the rows it changes. No install or update
-rewrites it.
-
-When the operator says which models to use from now on, create or edit the local override file
-yourself with only the changed rows; never edit the defaults above. Report what is now in effect.
+When the operator says which models to use from now on, create or edit the override yourself,
+changed rows only, never the defaults. Report what is in effect and where it is stored.
