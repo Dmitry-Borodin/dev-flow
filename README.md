@@ -4,7 +4,7 @@ A short, generic developer process skill: task, plan, delegation, review, pull r
 and syncing tasks and instructions. Each project declares what stands behind its terms.
 `skills/dev-flow/roles/` holds the briefs for each role: coordinator, developer, reviewer,
 observer, describer and design consult. `skills/dev-flow/models.md` names the model for each
-role; overrides go in the project instructions or `~/.config/dev-flow/models.md`.
+role; overrides go in the project instructions or a local file in the skill's install scope.
 
 ## Install
 
