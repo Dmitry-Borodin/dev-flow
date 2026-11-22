@@ -13,8 +13,8 @@ capable class that does the job, and always state the model explicitly when assi
 
 ## Overrides
 
-The more specific layer wins, row by row: project instructions, a local override file, the
-defaults above.
+The more specific layer wins, row by row: the operator's instructions (the current request,
+then the agent's saved memory), project instructions, a local override file, the defaults above.
 
 Keep the override in the skill's install scope (workspace or project, user, system) at that
 scope's usual config location, e.g. `.dev-flow/models.md` in a workspace or
