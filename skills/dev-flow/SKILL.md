@@ -23,7 +23,7 @@ The project declares:
 - PR format details: statistics, labels, how to attach media and check links, and the code areas
   for the final report.
 - Whether the developer commits and pushes its candidate; by default the coordinator does.
-- Agents and models available per role, when it limits them.
+- Agents available per role, when it limits them, and model overrides; see [Roles](#roles).
 
 ## Terms
 
@@ -116,14 +116,16 @@ use the PR body with public facts only; the coordinator may append a remaining-w
 
 ## Roles
 
-| Role | Model | Does |
+| Role | Model class | Does |
 | --- | --- | --- |
-| [Coordinator](roles/coordinator.md) | the main session | task, scope, rounds, acceptance, PR |
-| [Developer](roles/developer.md) | strongest | sole writer: implements, checks, repairs |
-| [Reviewer](roles/reviewer.md) | strongest, fresh | read-only review and re-review |
-| [Observer](roles/observer.md) | fast | runs or watches one long check |
-| [Describer](roles/describer.md) | capable, fresh | PR title and body from the diff |
-| [Design consult](roles/design-consult.md) | strongest, fresh | step 2 design pass, stuck rounds |
+| [Coordinator](roles/coordinator.md) | main session | task, scope, rounds, acceptance, PR |
+| [Developer](roles/developer.md) | smart | sole writer: implements, checks, repairs |
+| [Reviewer](roles/reviewer.md) | smart, fresh; max for design | read-only review and re-review |
+| [Observer](roles/observer.md) | cheap | runs or watches one long check |
+| [Describer](roles/describer.md) | cheap, fresh | PR title and body from the diff |
+| [Design consult](roles/design-consult.md) | max, fresh | step 2 design pass, stuck rounds |
+
+[Models](models.md) maps each class to default models and says how to override them.
 
 - **Required review:** a substantial change, or one with a risk you can name, gets one developer
   as sole writer and one independent reviewer; a second reviewer only on request or for a separate

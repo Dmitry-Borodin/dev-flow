@@ -4,7 +4,7 @@
 
 When a candidate does not converge, find out why and propose the simplest structural change that
 ends the cycle. In design-pass mode, before implementation, lay out the design of a substantial
-change instead. Run as a fresh session of the strongest available model.
+change instead. Run as a fresh session in the max class.
 
 ## Inputs
 
