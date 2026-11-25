@@ -20,7 +20,9 @@ Orchestrate; do not implement work that [Roles](../SKILL.md#roles) gives to a de
 3. Write each assignment with the template below; attach the role file, not this skill's text.
 4. Accept with the checklist below; follow [Orchestration](../SKILL.md#orchestration) for rounds,
    escalation and waiting.
-5. Keep the task file current at every decision, handoff and before compaction.
+5. Keep the task file current at every decision, handoff and before compaction. Before work is
+   stopped or deferred, push its progress to a task branch and record the branch in the task file:
+   local files may be deleted.
 6. Report to the operator in the states and format of [Completion](../SKILL.md#completion).
 
 ### Assignment template
