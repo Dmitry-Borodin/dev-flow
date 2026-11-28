@@ -125,7 +125,8 @@ use the PR body with public facts only; the coordinator may append a remaining-w
 | [Describer](roles/describer.md) | cheap, fresh | PR title and body from the diff |
 | [Design consult](roles/design-consult.md) | max, fresh | step 2 design pass, stuck rounds |
 
-[Models](models.md) maps each class to default models and says how to override them.
+[Models](models.md) maps each class to default models and a compact limit, and says how to
+override them.
 
 - **Required review:** a substantial change, or one with a risk you can name, gets one developer
   as sole writer and one independent reviewer; a second reviewer only on request or for a separate
