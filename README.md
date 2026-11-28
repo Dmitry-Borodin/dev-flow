@@ -5,6 +5,8 @@ and syncing tasks and instructions. Each project declares what stands behind its
 `skills/dev-flow/roles/` holds the briefs for each role: coordinator, developer, reviewer,
 observer, describer and design consult. `skills/dev-flow/models.md` names the model for each
 role; overrides go in the project instructions or a local file in the skill's install scope.
+Some native subagent tools take a worker's compact limit in its role definition; others cannot
+set one per worker, and the worker inherits the parent session's.
 
 ## Install
 
